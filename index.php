@@ -12,7 +12,8 @@ $routes = [
         '/edit' => 'adminEdit',
         '/admin/uj-etel-letrehozasa' => 'adminAddDishes',
         '/admin/etel-szerkesztese' => 'editDishes',
-        '/admin/etel-tipusok' => 'adminAddTypes'
+        '/admin/etel-tipusok' => 'adminAddTypes',
+        '/admin/tipus-szerkesztese' => 'editTypeHandler'
         
     ],
     'POST' => [
@@ -21,7 +22,9 @@ $routes = [
         '/update-dish' => 'updateHandler',
         '/delete-dish' => 'deleteHandler',
         '/create-dish' => 'createDishHandler',
-        '/create-dish-type' => 'createTypeHandler'
+        '/create-dish-type' => 'createTypeHandler',
+        '/update-type' => 'updateTypeHandler',
+        '/delete-type' => 'deleteTypeHandler'
     ]
 ];
 
@@ -42,7 +45,9 @@ function dishTypeList() {
         $dishTypes[$index]['dishes'] = $dishes;
     }
 
-
+    $pdo = null;
+    $stmt = null; 
+    
     echo render("wrapper.phtml", [
         'content' => render('public-menu.phtml', [
             'dishTypesWithDishes' => $dishTypes
@@ -102,6 +107,9 @@ $pdo = getConnection();
 $stmt = $pdo->prepare("SELECT * FROM dishes ORDER BY id DESC");
 $stmt->execute();
 $dishes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$pdo = null;
+$stmt = null; 
+
 
 echo render('admin-wrapper.phtml', [
     'content' => render('dish-list.phtml', [
@@ -116,6 +124,9 @@ function adminAddDishes() {
     $statement = $pdo->prepare('SELECT * FROM `dishtypes` ');
     $statement->execute();
     $dishTypes = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $pdo = null;
+$stmt = null; 
+
     echo render('wrapper.phtml', [
         'content' => render('create-dish.phtml' , [
             'dishTypes' => $dishTypes
@@ -138,7 +149,9 @@ function editDishes() {
     $statement->execute();
     $dishTypes = $statement->fetchAll(PDO::FETCH_ASSOC);
    
-  
+    $pdo = null;
+    $stmt = null; 
+    
 
     echo render('wrapper.phtml', [
         'content' => render('edit-dish.phtml', [
@@ -147,6 +160,19 @@ function editDishes() {
         ])
         
     ]);
+}
+function editTypeHandler() {
+    $dishTypeId = $_GET['id'];
+    $pdo = getConnection();
+    $statement = $pdo->prepare('SELECT * FROM dishtypes where id = ?');
+    $statement->execute([$dishTypeId]);
+    $type = $statement->fetch(PDO::FETCH_ASSOC);
+    
+    echo render('wrapper.phtml', [
+        'content' => render('edit-type.phtml', [
+        'type' => $type,
+        ])
+        ]);
 }
 
 function updateHandler() {
@@ -167,8 +193,21 @@ function updateHandler() {
         $_POST['dishTypeId']
         
     ]);
+    $pdo = null;
+$stmt = null; 
     header('Location: /admin');
-    
+}
+
+function updateTypeHandler() {
+    $TypeId = $_GET['id'] ?? '';
+    $pdo = getConnection();
+    $stmt = $pdo->prepare(
+        "UPDATE dishtypes SET name = ?, description = ? WHERE id = $TypeId"
+    );
+    $stmt->execute([
+        $_POST['name'], $_POST['descrition']
+    ]);
+    header('Location: /admin/etel-tipusok');
 }
 
 function deleteHandler(){
@@ -176,7 +215,24 @@ function deleteHandler(){
     $pdo = getConnection();
     $stmt = $pdo->prepare("DELETE from dishes where id = $dishId");
     $stmt->execute();
+    $pdo = null;
+$stmt = null; 
+
     header('Location: /admin');
+}
+
+function deleteTypeHandler(){
+    $TypeId = $_GET['id'] ?? '';
+    $pdo = getConnection();
+    $stmt = $pdo->prepare(
+        "SELECT count(*) FROM dishes where dishTypeId = $TypeId");
+    $stmt->execute();
+    $inUseType = $stmt->fetch(PDO::FETCH_ASSOC);
+    if($inUseType > 0) {
+        echo render('wrapper.phtml', [
+            'content' => "A tétel nem törölhető, mert ilyen ételtípus szerepel az étlapon!"]);
+    }
+    header('Location: /admin/etel-tipusok');
 }
 
 function createDishHandler() {
@@ -196,6 +252,8 @@ $stmt->execute([
     "aktiv" =>  (int)isset($_POST['isActive']),
     "dishTypeId" =>  $_POST['dishTypeId'],
 ]);
+$pdo = null;
+$stmt = null; 
 
 header('Location: /admin');
 }
@@ -227,7 +285,9 @@ function adminAddTypes() {
     $statement = $pdo->prepare('SELECT * FROM `dishtypes` ');
     $statement->execute();
     $dishTypes = $statement->fetchAll(PDO::FETCH_ASSOC);
-   
+    $pdo = null;
+    $stmt = null; 
+    
   
     echo render('wrapper.phtml', [
         'content' => render('dish-type-list.phtml', [
@@ -250,6 +310,8 @@ $stmt->execute([
     "nev" => $_POST['name'],
     "leiras" => $_POST['description'],
 ]);
+$pdo = null;
+$stmt = null; 
 
 header('Location: admin/etel-tipusok');
 }

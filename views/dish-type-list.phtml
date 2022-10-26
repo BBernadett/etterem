@@ -1,6 +1,5 @@
 <section class="ftco-section">
     <div class="container">
-
         <div class="row">
             <?php foreach ($params['dishTypes'] as $dishType) : ?>
             <div class="col-md-12">
@@ -12,8 +11,17 @@
                                     <?= $dishType['name'] ?>
                                 </h3>
                             </div>
+                            <a href="/admin/tipus-szerkesztese?id=<?= $dishType['id'] ?>">
+                                <button class="btn btn-sm btn-outline-warning">Szerkesztés</button>
+                            </a>
+                            <form action="/delete-type?id=<?= $dishType['id'] ?>" method="POST" class="d-inline-block">
+                                <button class="btn btn-sm btn-outline-danger">Törlés</button>
+                            </form>
+
                         </div>
+
                     </div>
+
                 </div>
             </div>
             <?php endforeach ?>
